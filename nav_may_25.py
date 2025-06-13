@@ -67,7 +67,7 @@ df = data.copy()
 # Trim leading and trailing whitespaces from column names
 df.columns = df.columns.str.strip()
 
-# Filtered df where 'Date of Activity:' is in March
+# Filtered df where 'Date of Activity:' is in May
 df["Date of Activity"] = pd.to_datetime(df["Date of Activity"], errors='coerce')
 df = df[df['Date of Activity'].dt.month == 5]
 
@@ -77,7 +77,12 @@ report_year = datetime(2025, 5, 1).year
 
 # Strip whitespace
 df.columns = df.columns.str.strip()
-df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+# Strip whitespace from string entries in the whole DataFrame
+for col in df.select_dtypes(include='object').columns:
+    df[col] = df[col].map(lambda x: x.strip() if isinstance(x, str) else x)
+
+# df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
 # Define a discrete color sequence
 # color_sequence = px.colors.qualitative.Plotly
@@ -191,6 +196,101 @@ travel_time = round(df['Travel'].sum() / 60)
 # print('Travel Time dtype:', df['Total travel time (minutes):'].dtype)
 # print('Total Travel Time:', travel_time)
 
+# ------------------------------- Race Graphs ---------------------------- #
+
+df['Ethnicity'] = (
+    df['Ethnicity']
+        .astype(str)
+        .str.strip()
+        .replace({
+            "Hispanic/Latino": "Hispanic/ Latino", 
+            "White": "White/ European Ancestry", 
+            "Group search": "N/A", 
+            "Group search": "N/A", 
+        })
+)
+
+# Groupby Race/Ethnicity:
+df_race = df['Ethnicity'].value_counts().reset_index(name='Count')
+
+# Race Bar Chart
+race_bar=px.bar(
+    df_race,
+    x='Ethnicity',
+    y='Count',
+    color='Ethnicity',
+    text='Count',
+).update_layout(
+    height=700, 
+    width=1000,
+    title=dict(
+        text='Race Distribution Bar Chart',
+        x=0.5, 
+        font=dict(
+            size=25,
+            family='Calibri',
+            color='black',
+            )
+    ),
+    font=dict(
+        family='Calibri',
+        size=18,
+        color='black'
+    ),
+    xaxis=dict(
+        tickangle=-20,  # Rotate x-axis labels for better readability
+        tickfont=dict(size=18),  # Adjust font size for the tick labels
+        showticklabels=False,  # Hide x-tick labels
+        title=dict(
+            # text=None,
+            text="Race/ Ethnicity",
+            font=dict(size=20),  # Font size for the title
+        ),
+    ),
+    yaxis=dict(
+        title=dict(
+            text='Count',
+            font=dict(size=20),  # Font size for the title
+        ),
+    ),
+    legend=dict(
+        title='',
+        orientation="v",  # Vertical legend
+        x=1.05,  # Position legend to the right
+        y=1,  # Position legend at the top
+        xanchor="left",  # Anchor legend to the left
+        yanchor="top",  # Anchor legend to the top
+        # visible=False,
+        visible=True,
+    ),
+    hovermode='closest', # Display only one hover label per trace
+    bargap=0.07,  # Reduce the space between bars
+    bargroupgap=0,  # Reduce space between individual bars in groups
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Race:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+)
+
+# Race Pie Chart
+race_pie=px.pie(
+    df_race,
+    names='Ethnicity',
+    values='Count'
+).update_layout(
+    height=700, 
+    title='Race Distribution Pie Chart',
+    title_x=0.5,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    )
+).update_traces(
+    # textinfo='value+percent',
+    texttemplate='%{value}<br>(%{percent:.2%})',
+    hovertemplate='<b>%{label}</b>: %{value}<extra></extra>'
+)
+
 # ------------------------------- Gender Distribution ---------------------------- #
 
 # print("Gender Unique Before:", df['Gender'].unique().tolist())
@@ -294,89 +394,6 @@ gender_pie=px.pie(
     # textinfo='value+percent',
     texttemplate='%{value}<br>(%{percent:.2%})',
     hovertemplate='<b>%{label} Visits</b>: %{value}<extra></extra>'
-)
-
-# ------------------------------- Race Graphs ---------------------------- #
-
-# # Groupby Race/Ethnicity:
-df_race = df['Ethnicity'].value_counts().reset_index(name='Count')
-
-# Race Bar Chart
-race_bar=px.bar(
-    df_race,
-    x='Ethnicity',
-    y='Count',
-    color='Ethnicity',
-    text='Count',
-).update_layout(
-    height=700, 
-    width=1000,
-    title=dict(
-        text='Race Distribution Bar Chart',
-        x=0.5, 
-        font=dict(
-            size=25,
-            family='Calibri',
-            color='black',
-            )
-    ),
-    font=dict(
-        family='Calibri',
-        size=18,
-        color='black'
-    ),
-    xaxis=dict(
-        tickangle=-20,  # Rotate x-axis labels for better readability
-        tickfont=dict(size=18),  # Adjust font size for the tick labels
-        showticklabels=False,  # Hide x-tick labels
-        title=dict(
-            # text=None,
-            text="Race/ Ethnicity",
-            font=dict(size=20),  # Font size for the title
-        ),
-    ),
-    yaxis=dict(
-        title=dict(
-            text='Count',
-            font=dict(size=20),  # Font size for the title
-        ),
-    ),
-    legend=dict(
-        title='',
-        orientation="v",  # Vertical legend
-        x=1.05,  # Position legend to the right
-        y=1,  # Position legend at the top
-        xanchor="left",  # Anchor legend to the left
-        yanchor="top",  # Anchor legend to the top
-        # visible=False,
-        visible=True,
-    ),
-    hovermode='closest', # Display only one hover label per trace
-    bargap=0.07,  # Reduce the space between bars
-    bargroupgap=0,  # Reduce space between individual bars in groups
-).update_traces(
-    textposition='auto',
-    hovertemplate='<b>Race:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
-)
-
-# Race Pie Chart
-race_pie=px.pie(
-    df_race,
-    names='Ethnicity',
-    values='Count'
-).update_layout(
-    height=700, 
-    title='Race Distribution Pie Chart',
-    title_x=0.5,
-    font=dict(
-        family='Calibri',
-        size=17,
-        color='black'
-    )
-).update_traces(
-    # textinfo='value+percent',
-    texttemplate='%{value}<br>(%{percent:.2%})',
-    hovertemplate='<b>%{label}</b>: %{value}<extra></extra>'
 )
 
 # ------------------------------- Age Distribution ---------------------------- #
@@ -532,7 +549,7 @@ age_pie = px.pie(
 
 # ------------------------------- Insurance Status ------------------------- #
 
-print("Insurance Unique Before:", df["Insurance"].unique().tolist())
+# print("Insurance Unique Before:", df["Insurance"].unique().tolist())
 
 insurance_unique = [
     '',
@@ -559,10 +576,12 @@ df["Insurance"] = (
         '30 DAY 100': '30 Day 100',
         'Medicare': 'Medicaid',
         'Medicare': 'Medicaid',
+        'NONE': 'None',
+        'Map 000': 'MAP 100',
     })
 )
 
-print("Insurance Unique After:", df["Insurance"].unique().tolist())
+# print("Insurance Unique After:", df["Insurance"].unique().tolist())
 
 df_insurance = df.groupby("Insurance").size().reset_index(name='Count')
 # # print(df["Individual's Insurance Status:"].value_counts())
@@ -1024,23 +1043,24 @@ status_pie=px.pie(
 
 # ----------------------- Person Filling Out This Form ------------------------ #
 
-# print("Person Unique", df["Person submitting this form:"].unique().tolist())
+# print("Person Unique Before: \n", df["Person"].unique().tolist())
 
 person_unique = [
-    'Sonya Hosey', 
-    'Viviana Varela',
-    'Jaqueline Oviedo', 
-    'Michael Lambert',
-    'Michael Lambert ', 
-    'Larry Wallace Jr', 
-    'Rishit Yokananth', 
-    'Dominique Street', 
+    'Dominique Street',
     'Dr Larry Wallace Jr',
-    'Eric Roberts', 
-    'Toya Craney', 
-    'Eric roberts', 
-    'EricRoberts', 
-    'Kimberly Holiday'
+    'Eric Roberts',
+    'Eric roberts',
+    'EricRoberts',
+    'Jaqueline Oviedo',
+    'Kimberly Holiday',
+    'Larry Wallace Jr',
+    'Michael Lambert',
+    'Michael Lambert ',
+    'Rishit Yokananth',
+    'Sonya Hosey',
+    'Toya Craney',
+    'Tramisha Pete',
+    'Viviana Varela',
 ]
 
 df['Person'] = (
@@ -1056,8 +1076,22 @@ df['Person'] = (
         })
     )
 
+normalized_categories = {cat.lower().strip(): cat for cat in person_unique}
+counter = Counter()
+
+for entry in df['Person']:
+    items = [i.strip().lower() for i in entry.split(",")]
+    for item in items:
+        if item in normalized_categories:
+            counter[normalized_categories[item]] += 1
+
+# for category, count in counter.items():
+#     print(f"Support Counts: \n {category}: {count}")
+
+df_person = pd.DataFrame(counter.items(), columns=['Person', 'Count']).sort_values(by='Count', ascending=False)
+
 # # Groupby Person submitting this form:
-df_person = df['Person'].value_counts().reset_index(name='Count')
+# df_person = df['Person'].value_counts().reset_index(name='Count')
 # print('Person Submitting: \n', person_submitting)
 
 # Person Submitting Bar Chart
@@ -1142,44 +1176,71 @@ person_pie=px.pie(
 
 # ---------------------- Zip 2 --------------------- #
 
-df['ZIP2'] = df['ZIP Code:']
+# df['ZIP2'] = df['ZIP Code:']
 # print('ZIP2 Unique Before: \n', df['ZIP2'].unique().tolist())
 
-zip2_unique =[
-78753, '', 78721, 78664, 78725, 78758, 78724, 78660, 78723, 78748, 78744, 78752, 78745, 78617, 78754, 78653, 78727, 78747, 78659, 78759, 78741, 78616, 78644, 78757, 'UnKnown', 'Unknown', 'uknown', 'Unknown ', 78729
-]
-        
-zip2_mode = df['ZIP2'].mode()[0]
+# zip2_unique =[
+# 78753, '', 78721, 78664, 78725, 78758, 78724, 78660, 78723, 78748, 78744, 78752, 78745, 78617, 78754, 78653, 78727, 78747, 78659, 78759, 78741, 78616, 78644, 78757, 'UnKnown', 'Unknown', 'uknown', 'Unknown ', 78729
+# ]
 
-df['ZIP2'] = (
-    df['ZIP2']
-    .astype(str)
-    .str.strip()
-    .replace({
-        'Texas': zip2_mode,
-        'Unhoused': zip2_mode,
-        'UNHOUSED': zip2_mode,
-        'UnKnown': zip2_mode,
-        'Unknown': zip2_mode,
-        'uknown': zip2_mode,
-        'Unknown': zip2_mode,
-        'NA': zip2_mode,
-        'nan': zip2_mode,
-        '': zip2_mode,
-    })
-)
+# zip2_mode = df['ZIP2'].mode()[0]
 
-df['ZIP2'] = df['ZIP2'].fillna(zip2_mode)
-df_z = df['ZIP2'].value_counts().reset_index(name='Count')
+# df['ZIP2'] = (
+#     df['ZIP2']
+#     .astype(str)
+#     .str.strip()
+#     .replace({
+#         'Texas': zip2_mode,
+#         'Unhoused': zip2_mode,
+#         'UNHOUSED': zip2_mode,
+#         'UnKnown': zip2_mode,
+#         'Unknown': zip2_mode,
+#         'uknown': zip2_mode,
+#         'Unknown': zip2_mode,
+#         'NA': zip2_mode,
+#         'nan': zip2_mode,
+#         '': zip2_mode,
+#         ' ': zip2_mode,
+#     })
+# )
+
+# df['ZIP2'] = df['ZIP2'].fillna(zip2_mode)
+# df_z = df['ZIP2'].value_counts().reset_index(name='Count')
 
 # print('ZIP2 Unique After: \n', df_z['ZIP2'].unique().tolist())
+# print('ZIP2 Value Counts After: \n', df_z['ZIP2'].value_counts())
+
+df['ZIP2'] = df['ZIP Code:'].astype(str).str.strip()
+
+valid_zip_mask = df['ZIP2'].str.isnumeric()
+zip2_mode = df.loc[valid_zip_mask, 'ZIP2'].mode()[0]  # still a string
+
+invalid_zip_values = [
+    'Texas', 'Unhoused', 'UNHOUSED', 'UnKnown', 'Unknown', 'uknown',
+    'Unknown ', 'NA', 'nan', 'NaN', 'None', '', ' '
+]
+df['ZIP2'] = df['ZIP2'].replace(invalid_zip_values, zip2_mode)
+
+# Step 3: Coerce to numeric, fill any remaining NaNs, then convert back to string
+df['ZIP2'] = pd.to_numeric(df['ZIP2'], errors='coerce')
+df['ZIP2'] = df['ZIP2'].fillna(int(zip2_mode)).astype(int).astype(str)
+
+# Step 4: Create value count dataframe for the bar chart
+df_z = df['ZIP2'].value_counts().reset_index(name='Count')
+df_z.columns = ['ZIP2', 'Count']  # Rename columns for Plotly
+
+df_z['Percentage'] = (df_z['Count'] / df_z['Count'].sum()) * 100
+df_z['text_label'] = df_z['Count'].astype(str) + ' (' + df_z['Percentage'].round(1).astype(str) + '%)'
+# df_z['text_label'] = df_z['Percentage'].round(1).astype(str) + '%'
+
 
 zip_fig =px.bar(
     df_z,
     x='Count',
     y='ZIP2',
     color='ZIP2',
-    text='Count',
+    text='text_label',
+    # text='Count',
     orientation='h'  # Horizontal bar chart
 ).update_layout(
     title='Number of Clients by Zip Code',
@@ -1210,6 +1271,28 @@ zip_fig =px.bar(
     # insidetextanchor='middle',  # Center text within the bars
     textangle=0,            # Ensure text labels are horizontal
     hovertemplate='<b>ZIP Code</b>: %{y}<br><b>Count</b>: %{x}<extra></extra>'
+)
+
+zip_pie = px.pie(
+    df_z,
+    names='ZIP2',
+    values='Count',
+    title='Client Distribution by ZIP Code',
+    color_discrete_sequence=px.colors.qualitative.Safe
+).update_layout(
+    title_x=0.5,
+    height=700,
+    width=900,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    ),
+    legend_title='ZIP Code'
+).update_traces(
+    textinfo='percent+label',
+    textfont_size=16,
+    hovertemplate='<b>ZIP Code</b>: %{label}<br><b>Count</b>: %{value}<br><b>Percent</b>: %{percent}<extra></extra>'
 )
 
 # -----------------------------------------------------------------------------
@@ -1416,36 +1499,35 @@ map_file = os.path.join(script_dir, map_path)
 m.save(map_file)
 map_html = open(map_file, 'r').read()
 
-# # ========================== DataFrame Table ========================== #
+# # # ========================== DataFrame Table ========================== #
 
-# # Organizational Events Table
-df_table = go.Figure(data=[go.Table(
-    # columnwidth=[50, 50, 50],  # Adjust the width of the columns
-    header=dict(
-        values=list(df.columns),
-        fill_color='paleturquoise',
-        align='center',
-        height=30,  # Adjust the height of the header cells
-        # line=dict(color='black', width=1),  # Add border to header cells
-        font=dict(size=12)  # Adjust font size
-    ),
-    cells=dict(
-        values=[df[col] for col in df.columns],
-        fill_color='lavender',
-        align='left',
-        height=25,  # Adjust the height of the cells
-        # line=dict(color='black', width=1),  # Add border to cells
-        font=dict(size=12)  # Adjust font size
-    )
-)])
+# df_table = go.Figure(data=[go.Table(
+#     # columnwidth=[50, 50, 50],  # Adjust the width of the columns
+#     header=dict(
+#         values=list(df.columns),
+#         fill_color='paleturquoise',
+#         align='center',
+#         height=30,  # Adjust the height of the header cells
+#         # line=dict(color='black', width=1),  # Add border to header cells
+#         font=dict(size=12)  # Adjust font size
+#     ),
+#     cells=dict(
+#         values=[df[col] for col in df.columns],
+#         fill_color='lavender',
+#         align='left',
+#         height=25,  # Adjust the height of the cells
+#         # line=dict(color='black', width=1),  # Add border to cells
+#         font=dict(size=12)  # Adjust font size
+#     )
+# )])
 
-df_table.update_layout(
-    margin=dict(l=50, r=50, t=30, b=40),  # Remove margins
-    height=400,
-    # width=1500,  # Set a smaller width to make columns thinner
-    paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-    plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot area
-)
+# df_table.update_layout(
+#     margin=dict(l=50, r=50, t=30, b=40),  # Remove margins
+#     height=400,
+#     # width=1500,  # Set a smaller width to make columns thinner
+#     paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
+#     plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot area
+# )
 
 # ============================== Dash Application ========================== #
 
@@ -1700,29 +1782,6 @@ html.Div(
     ]
 ),
 
-# # ROW 4
-# html.Div(
-#     className='row1',
-#     children=[
-#         html.Div(
-#             className='graph1',
-#             children=[
-#                 dcc.Graph(
-#                     figure=location_bar
-#                 )
-#             ]
-#         ),
-#         html.Div(
-#             className='graph2',
-#             children=[
-#                 dcc.Graph(
-#                     figure=location_pie
-#                 )
-#             ]
-#         )
-#     ]
-# ),
-
 html.Div(
     className='row3',
     children=[
@@ -1838,6 +1897,21 @@ html.Div(
     ]
 ),
 
+# ROW 9
+html.Div(
+    className='row4',
+    children=[
+        html.Div(
+            className='graph5',
+            children=[
+                dcc.Graph(
+                    figure=zip_pie
+                )
+            ]
+        )
+    ]
+),
+
 # # ROW 8
 html.Div(
     className='row3',
@@ -1869,30 +1943,26 @@ if __name__ == '__main__':
                 
 # ----------------------------------------------- Updated Database --------------------------------------
 
-# updated_path1 = 'data/service_tracker_q4_2024_cleaned.csv'
-# data_path1 = os.path.join(script_dir, updated_path1)
-# df.to_csv(data_path1, index=False)
-# print(f"DataFrame saved to {data_path1}")
-
 # updated_path = f'data/Navigation_{current_month}_{report_year}.xlsx'
 # data_path = os.path.join(script_dir, updated_path)
+# sheet_name=f'{current_month} {report_year}'
 
 # with pd.ExcelWriter(data_path, engine='xlsxwriter') as writer:
 #     df.to_excel(
 #             writer, 
-#             sheet_name=f'Navigation {current_month} {report_year}', 
+#             sheet_name=sheet_name, 
 #             startrow=1, 
 #             index=False
 #         )
 
 #     # Access the workbook and each worksheet
 #     workbook = writer.book
-#     sheet1 = writer.sheets['Navigation April 2025']
+#     sheet1 = writer.sheets[sheet_name]
     
 #     # Define the header format
 #     header_format = workbook.add_format({
 #         'bold': True, 
-#         'font_size': 13, 
+#         'font_size': 16, 
 #         'align': 'center', 
 #         'valign': 'vcenter',
 #         'border': 1, 
@@ -1925,7 +1995,7 @@ if __name__ == '__main__':
 #     })
 
 #     # Merge and format the first row (A1:E1) for each sheet
-#     sheet1.merge_range('A1:Y1', f'Client Navigation Report {current_month} {report_year}', header_format)
+#     sheet1.merge_range('A1:AB1', f'Client Navigation Report {current_month} {report_year}', header_format)
 
 #     # Set column alignment and width
 #     # sheet1.set_column('A:A', 20, left_align_format)  
