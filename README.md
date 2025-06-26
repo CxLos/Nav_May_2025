@@ -21,7 +21,7 @@
 
   - [Navigation Report April 2025](https://nav-apr-2025.onrender.com/)
 
-![Preview](./screenshots/Screenshot-163423.png)
+![Preview](./screenshots/Screenshot-163424.png)
 
 ## Installation
 

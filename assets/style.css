@@ -362,3 +362,15 @@
   padding: 10px 0px 40px 0px;
   width: 98%;
 }
+
+/* --------------------------------------------- */
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 768px) {
+  .graph1,
+  .graph2 {
+    width: 100%;
+    padding: 0 !important;
+    border-right: none;
+  }
+}

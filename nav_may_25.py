@@ -855,7 +855,6 @@ support_categories =[
 ]
 
 # Normalize support_categories (lowercase and stripped for consistency)
-# The code is creating a dictionary `normalized_categories` where the keys are the lowercase versions of the categories in the `support_categories` list, stripped of any leading or trailing whitespace, and the values are the original categories. This allows for easy lookup of categories in a case-insensitive manner.
 normalized_categories = {cat.lower().strip(): cat for cat in support_categories}
 
 # Counter to count matches
@@ -2042,9 +2041,9 @@ if __name__ == '__main__':
 
 # Heroku Setup:
 # heroku login
-# heroku create nav-jan-2025
-# heroku git:remote -a nav-jan-2025
-# git remote set-url heroku git@heroku.com:nav-jan-2025.git
+# heroku create nav-may-2025
+# heroku git:remote -a nav-may-2025
+# git remote set-url heroku git@heroku.com:nav-may-2025.git
 # git push heroku main
 
 # Clear Heroku Cache:
