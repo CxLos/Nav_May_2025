@@ -143,9 +143,9 @@ df.rename(
         "Location Encountered:" : "Location",
         "Individual's Insurance Status:" : "Insurance",
         "Individual's Status:" : "Status",
-        "Type of support given:" : "Support",
+        "Type of Support Given:" : "Support",
         "Gender:" : "Gender",
-        "Race/Ethnicity:" : "Ethnicity",
+        "Race / Ethnicity:" : "Ethnicity",
         # "" : "",
     }, 
 inplace=True)
